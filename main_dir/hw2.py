@@ -12,7 +12,7 @@ def printCompetitor(competitor):
     competitor_country = competitor['competitor country']
     result = competitor['result']
     
-    assert(isinstance(result, int)) # Updated. Safety check for the type of result
+    assert(isinstance(result, int)) # Updated. Safety check for the type of resul
 
     print(f'Competitor {competitor_id} from {competitor_country} participated in {competition_name} ({competition_type}) and scored {result}')
 
