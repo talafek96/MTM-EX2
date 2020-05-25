@@ -1,3 +1,7 @@
+RESULT_DICT = 1
+COMPETITION_TYPE = 0
+BANNED_PLAYER = 'ban'
+
 def printCompetitor(competitor):
     '''
     Given the data of a competitor, the function prints it in a specific format.
@@ -43,7 +47,6 @@ def key_sort_competitor(competitor):
     result = competitor['result']
     return (competition_name, result)
 
-
 def readParseData(file_name):
     '''
     Given a file name, the function returns a list of competitors.
@@ -56,11 +59,46 @@ def readParseData(file_name):
                 'result': result}
     '''
     competitors_in_competitions = []
-    # TODO Part A, Task 3.4
-
-
+    competitors_list = []
+    with open(file_name, 'r') as fd:
+        for line in fd:
+            args = line.split()
+            if args[0] == 'competitor':
+                #{(int)competitor id: (str)competitor country}
+                competitors_list.append({int(args[1]): args[2]})
+            elif args[0] == 'competition':
+                tmp_dict = {
+                    'competition name': args[1],
+                    'competitor id': int(args[2]),
+                    'competition type': args[3],
+                    'result': int(args[4])
+                }
+                competitors_in_competitions.append(tmp_dict)
+    for obj in competitors_in_competitions:
+        obj['competitor country'] = competitors_list[obj['competitor id']]
     return competitors_in_competitions
 
+def calcNonKnockoutChamps(result_dict, is_timed):
+    champs = []
+    tmp_list = sorted(list(result_dict.items()), key=lambda x: x[1], reverse=(is_timed == True))
+    id_list = [competitor_id for (competitor_id, _) in tmp_list[0:3]]
+    champs.extend(id_list)
+    undef_country = 'undef_country'
+    while len(champs) < 3:
+        champs.append(undef_country)
+    return champs
+       
+def calcKnockoutChamps(result_dict):
+    undef_country = 'undef_country'
+    champs = [undef_country, undef_country, undef_country]
+    for comperitor_id in result_dict:
+        if result_dict[comperitor_id] == 1:
+            champs[0] = comperitor_id
+        elif result_dict[comperitor_id] == 2:
+            champs[1] = comperitor_id
+        elif result_dict[comperitor_id] == 3:
+            champs[2] = comperitor_id
+    return champs
 
 def calcCompetitionsResults(competitors_in_competitions):
     '''
@@ -74,8 +112,26 @@ def calcCompetitionsResults(competitors_in_competitions):
         [competition_name, winning_gold_country, winning_silver_country, winning_bronze_country]
     '''
     competitions_champs = []
-    # TODO Part A, Task 3.5
-    
+    competitions_list = {}
+    for obj in competitors_in_competitions:
+        if obj['competition name'] in competitions_list:
+            result_dict = competitions_list[obj['competition name']][RESULT_DICT]
+            if obj['competitor id'] in result_dict:
+                result_dict[obj['competitor id']] = BANNED_PLAYER
+            else:
+                result_dict[obj['competitor id']] = obj['result']
+        else:
+            competitions_list[obj['competition name']] = [obj['competition type'], {obj['competitor id']: obj['result']}]
+    for competition, list in competitions_list.items():
+        if list[COMPETITION_TYPE] == 'timed':
+            champs = calcNonKnockoutChamps(list[RESULT_DICT], is_timed=True)
+        elif list[COMPETITION_TYPE] == 'untimed':
+            champs = calcNonKnockoutChamps(list[RESULT_DICT], is_timed=False)
+        elif list[COMPETITION_TYPE] == 'knockout':
+            champs = calcKnockoutChamps(list[RESULT_DICT])
+        undef_country = 'undef_country'
+        if champs[0] != undef_country:
+            competitions_champs.append([competition, *champs]) #Convert champs to country name
     return competitions_champs
 
 
@@ -96,8 +152,8 @@ def partA(file_name = 'input.txt', allow_prints = True):
     return competitions_results
 
 
-def partB(file_name = 'input.txt'):
-    competitions_results = partA(file_name, allow_prints = False)
+#def partB(file_name = 'input.txt'):
+ #   competitions_results = partA(file_name, allow_prints = False)
     # TODO Part B
 
 
@@ -108,7 +164,7 @@ if __name__ == "__main__":
     
     To run only a single part, comment the line below which correspondes to the part you don't want to run.
     '''    
-    file_name = 'input.txt'
+    file_name = 'test1.txt'
 
     partA(file_name)
-    partB(file_name)
+   # partB(file_name)
