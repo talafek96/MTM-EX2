@@ -59,13 +59,13 @@ def readParseData(file_name):
                 'result': result}
     '''
     competitors_in_competitions = []
-    competitors_list = []
+    competitors_list = {}
     with open(file_name, 'r') as fd:
         for line in fd:
             args = line.split()
             if args[0] == 'competitor':
                 #{(int)competitor id: (str)competitor country}
-                competitors_list.append({int(args[1]): args[2]})
+                competitors_list[int(args[1])] = args[2]
             elif args[0] == 'competition':
                 tmp_dict = {
                     'competition name': args[1],
@@ -80,7 +80,7 @@ def readParseData(file_name):
 
 def calcNonKnockoutChamps(result_dict, is_timed):
     champs = []
-    tmp_list = sorted(list(result_dict.items()), key=lambda x: x[1], reverse=(is_timed == True))
+    tmp_list = sorted(list(result_dict.items()), key=lambda x: x[1], reverse=(is_timed != True))
     id_list = [competitor_id for (competitor_id, _) in tmp_list[0:3]]
     champs.extend(id_list)
     undef_country = 'undef_country'
@@ -123,17 +123,26 @@ def calcCompetitionsResults(competitors_in_competitions):
         else:
             competitions_list[obj['competition name']] = [obj['competition type'], {obj['competitor id']: obj['result']}]
     for competition, list in competitions_list.items():
+        no_bans = {competitor: result for (competitor, result) in list[RESULT_DICT].items() if isinstance(result, int)}
         if list[COMPETITION_TYPE] == 'timed':
-            champs = calcNonKnockoutChamps(list[RESULT_DICT], is_timed=True)
+            champs = calcNonKnockoutChamps(no_bans, is_timed=True)
         elif list[COMPETITION_TYPE] == 'untimed':
-            champs = calcNonKnockoutChamps(list[RESULT_DICT], is_timed=False)
+            champs = calcNonKnockoutChamps(no_bans, is_timed=False)
         elif list[COMPETITION_TYPE] == 'knockout':
-            champs = calcKnockoutChamps(list[RESULT_DICT])
+            champs = calcKnockoutChamps(no_bans)
         undef_country = 'undef_country'
         if champs[0] != undef_country:
-            competitions_champs.append([competition, *champs]) #Convert champs to country name
+            country_list = []
+            for competitor in champs:
+                if competitor == undef_country:
+                    country_list.append(undef_country)
+                else:
+                    for entry in competitors_in_competitions:
+                        if entry['competitor id'] == competitor:
+                            country_list.append(entry['competitor country'])
+                            break
+            competitions_champs.append([competition, *country_list])
     return competitions_champs
-
 
 def partA(file_name = 'input.txt', allow_prints = True):
     # read and parse the input file
@@ -164,7 +173,7 @@ if __name__ == "__main__":
     
     To run only a single part, comment the line below which correspondes to the part you don't want to run.
     '''    
-    file_name = 'test1.txt'
+    file_name = 'test2.txt'
 
     partA(file_name)
    # partB(file_name)
