@@ -1,7 +1,3 @@
-RESULT_DICT = 1
-COMPETITION_TYPE = 0
-BANNED_PLAYER = 'ban'
-
 def printCompetitor(competitor):
     '''
     Given the data of a competitor, the function prints it in a specific format.
@@ -99,6 +95,9 @@ def calcCompetitionsResults(competitors_in_competitions):
         Every record in the list contains the competition name and the champs, in the following format:
         [competition_name, winning_gold_country, winning_silver_country, winning_bronze_country]
     '''
+    RESULT_DICT = 1
+    COMPETITION_TYPE = 0
+    BANNED_PLAYER = 'ban'
     competitions_champs = []
     competitions_list = {}
     for obj in competitors_in_competitions:
